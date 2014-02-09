@@ -32,7 +32,7 @@ class PrettyPrint
 
   def strip_whitespace doc
     doc.css(ws_accessor).each do |node|
-      eliminate_ws_nodes_from node
+      call_function_on_text node, Proc.new{ |x| x.remove if x.text.match /^\s*$/}
     end
     strip_extra_linebreaks doc if  @delete_all_linebreaks
   end
@@ -40,10 +40,14 @@ class PrettyPrint
   def strip_extra_linebreaks doc
     non_block_selector = (@compact + @inline).join(',')
     doc.css(non_block_selector).each do |node|
-      node.children.each do |child|
-        next unless child.text?
-        child.content = child.text.gsub(/[\r\n]/,'')
-      end
+      call_function_on_text node, Proc.new{ |x| x.content = x.text.gsub(/[\r\n]/,'') }
+    end
+  end
+
+  def call_function_on_text node, function
+    node.children.each do |child|
+      next unless child.text?
+      function.call child
     end
   end
 
@@ -61,12 +65,14 @@ class PrettyPrint
 
   def pp_blocks doc
     doc.css(@block.join(',')).each do |block|
-      unless block == doc.root
-        block.add_previous_sibling "\n" if needs_hard_return? block
-        add_left_space block
-      end
+      adjust_block_context block unless block == doc.root
       add_internal_space block
     end
+  end
+
+  def adjust_block_context block
+    block.add_previous_sibling "\n" if needs_hard_return? block
+    add_left_space block
   end
 
   def needs_hard_return? block
