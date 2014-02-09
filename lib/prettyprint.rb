@@ -25,6 +25,17 @@ class PrettyPrint
     doc.css(ws_accessor).each do |node|
       eliminate_ws_nodes_from node
     end
+    strip_extra_linebreaks doc if  @delete_all_linebreaks
+  end
+
+  def strip_extra_linebreaks doc
+    non_block_selector = (@compact + @inline).join(',')
+    doc.css(non_block_selector).each do |node|
+      node.children.each do |child|
+        next unless child.text?
+        child.content = child.text.gsub(/[\r\n]/,'')
+      end
+    end
   end
 
   def ws_accessor

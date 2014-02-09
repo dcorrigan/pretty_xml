@@ -10,6 +10,7 @@ class PrettyPrintTests < Minitest::Test
     :compact => %w(p),
     :inline => %w(i),
     :preserve_whitespace => true,
+    :delete_all_linebreaks => true,
     :tab => '  '
   }
 
@@ -47,6 +48,13 @@ class PrettyPrintTests < Minitest::Test
     assert @pp =~ /<p> <\/p>/
     assert @pp =~ /<i> <\/i>/
     assert @pp !~ /<root>  <p>/
+  end
+
+  def test_internal_linebreak_strip_works
+    @input = "<root>  <p>linebreak goes 
+here</p>  </root>"
+    setup_and_exercise OP1
+    assert @pp !~ /<p>[^<]*\n/
   end
 
   def test_more_complex_example
