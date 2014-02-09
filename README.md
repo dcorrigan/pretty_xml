@@ -1,30 +1,32 @@
 xml-prettyprint
 ===============
 
-A Ruby re-write of Perl LibXML PrettyPrint.
+A Ruby re-write of Perl's LibXML PrettyPrint.
 
 I don't recommend using this unless you are absolutely sure a human will have to read your XML file. It is slow and resource-intensive.
 
-xml-prettyprint does not support namespaced nodes yet.
+`xml-prettyprint` does not support namespaced nodes yet.
 
 ## Use
 
-xml-prettyprint expects that three main parameters be passed:
+`xml-prettyprint` expects that three main parameters be passed:
 
-  1. block: elements that should have internal and external linebreaks
-  2. compact: elements that should have external linebreaks
-  3. inline: elements that should have neither internal not external linebreaks
+  1. `block`: elements that should have internal and external linebreaks
+  2. `compact`: elements that should have external linebreaks
+  3. `inline`: elements that should have neither internal not external linebreaks
 
-A fourth parameter, tab, specifies the kind of space that should be used for indenting the output. Pass literal characters; for example, two spaces or a tab.
+A fourth parameter, `tab`, specifies the kind of space that should be used for indenting the output. Pass literal characters; for example, two spaces or a tab.
 
 Additional parameters are:
 
-  1. preserve_whitespace: retain standalone whitespace only text nodes within compact and inline elements 
-  2. delete_all_linebreaks: delete linebreak characters within all text nodes, regardless of whether preserve_whitespace is set to true
+  1. `preserve_whitespace`: retain standalone whitespace only text nodes within compact and inline elements 
+  2. `delete_all_linebreaks`: delete linebreak characters within all text nodes, regardless of whether preserve_whitespace is set to true
+
+Use these parameters within a hash to initialize an instance of the `PrettyPrint` class. To prettyprint a document, pass a `Nokogiri::XML::Document` as an argument to the `pp` method of your `PrettyPrint` object.
 
 ## Example
 
-require 'nokogiri'
+    require 'nokogiri'
 
     doc = Nokogiri.XML '<root>  <block>
      <p> 
