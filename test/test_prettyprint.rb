@@ -33,20 +33,6 @@ class PrettyPrintTests < Minitest::Test
     @pp = PrettyPrint.new(options).pp(@parsed)
   end
 
-  def test_strips_basic_whitespace_from_block_when_ws_is_true
-    @input = "<root>  <p>stuff</p>  </root>"
-    setup_and_exercise OP1
-    assert @pp.match /\n  <p>/
-  end
-
-  def test_leaves_inline_and_compact_space_when_ws_is_true
-    @input = "<root>  <p> </p><p>stuff<i> </i></p>  </root>"
-    setup_and_exercise OP1
-    assert @pp =~ /<p> <\/p>/
-    assert @pp =~ /<i> <\/i>/
-    assert @pp !~ /<root>  <p>/
-  end
-
   def test_strips_inline_and_compact_space_when_ws_is_false
     @input = "<root>  <p> </p><p>stuff<i> </i></p>  </root>"
     setup_and_exercise OP2
@@ -63,14 +49,17 @@ class PrettyPrintTests < Minitest::Test
     assert @pp !~ /<root>  <p>/
   end
 
-  def test_pp_blocks
-    @input = "<root>  <block><p> </p></block><p>stuff<i> </i></p>  </root>"
+  def test_more_complex_example
+    @input = Examples.example1[:in]
     setup_and_exercise OP1
-    assert @pp.match /<root>\n  <block>\n    <p>/
+    expected = Examples.example1[:out]
+    assert @pp == expected, "It looked like this: #{@pp}"
   end
 
-  def test_more_complex_example
-    @input = "<root>  <block>
+  module Examples
+
+    def self.example1
+      {:in => '<root>  <block>
  <p> </p>
     
     </block><p>stuff<i> </i></p>  
@@ -83,9 +72,8 @@ class PrettyPrintTests < Minitest::Test
                        <div>
                        <p>yo yo<i/></p>
 </div>
-</structure></root>"
-    setup_and_exercise OP1
-expected = '<?xml version="1.0"?>
+</structure></root>',
+      :out => '<?xml version="1.0"?>
 <root>
   <block>
     <p> </p>
@@ -103,7 +91,8 @@ expected = '<?xml version="1.0"?>
   </structure>
 </root>
 '
-assert @pp == expected, "It looked like this: #{@pp}"
+      }
+    end
   end
 
 end
