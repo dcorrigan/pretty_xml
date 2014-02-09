@@ -8,6 +8,8 @@ class PrettyPrint
     set_options_as_ivars options
   end
 
+  # expected params: block, compact, inline, tab
+  # optional params: preserve_whitespace, delete_all_linebreaks
   def set_options_as_ivars options
     options.each do |name, value|
       instance_variable_set("@#{name}", value)
@@ -15,10 +17,16 @@ class PrettyPrint
   end
 
   def pp doc
+    verify_doc doc
     strip_whitespace doc
     pp_blocks doc
     pp_compact doc
     doc.serialize(:save_with => 0)
+  end
+
+  def verify_doc doc
+    root = doc.root.name
+    raise ArgumentError.new('The root node may not be specified as compact or inline.') if (@compact + @inline).include? root
   end
 
   def strip_whitespace doc
@@ -61,9 +69,8 @@ class PrettyPrint
   end
 
   def needs_hard_return? block
-    @compact.include? block.previous_element.andand.name or
-    @block.include? block.previous_element.andand.name or
-    block == block.parent.elements.first
+    return true if block.previous_element.nil?
+    return true if (@compact + @block).include? block.previous_element.name
   end
 
   def pp_compact doc
@@ -74,18 +81,17 @@ class PrettyPrint
   end
 
   def add_left_space node
-    space_multiplier = node.ancestors.size - 1
-    space_multiplier.times do |x|
-      node.add_previous_sibling @tab
-    end
+    node.add_previous_sibling space_for(node)
   end
 
   def add_internal_space node
-    space_multiplier = node.ancestors.size - 1
     node.add_child "\n"
-    space_multiplier.times do |x|
-      node.add_child @tab
-    end
+    node.add_child space_for(node)
+  end
+
+  def space_for node
+    space_multiplier = node.ancestors.size - 1
+    @tab * space_multiplier
   end
 
 end

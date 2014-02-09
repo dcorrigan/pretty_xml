@@ -50,6 +50,21 @@ class PrettyPrintTests < Minitest::Test
     assert @pp !~ /<root>  <p>/
   end
 
+  def test_nonsensical_content_model_does_not_explode
+    @input = "<root>  <i>stuff<p> </p></i>  </root>"
+    setup_and_exercise OP1
+    assert @pp
+  end
+
+  def test_badly_specified_root_node_raises_error
+    @input = "<p>  <i>stuff<root> </root></i>  </p>"
+    parsed = Nokogiri.XML @input
+    pp = PrettyPrint.new(OP1)
+    assert_raises(ArgumentError){
+      pp.pp(parsed)
+    }
+  end
+
   def test_internal_linebreak_strip_works
     @input = "<root>  <p>linebreak goes 
 here</p>  </root>"
