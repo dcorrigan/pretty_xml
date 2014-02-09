@@ -65,6 +65,14 @@ class PrettyPrintTests < Minitest::Test
     }
   end
 
+  def test_nonnokogiri_doc_argument_raises_error
+    input = "<p>  <i>stuff<root> </root></i>  </p>"
+    pp = PrettyPrint.new(OP1)
+    assert_raises(ArgumentError){
+      pp.pp(input)
+    }
+  end
+
   def test_internal_linebreak_strip_works
     @input = "<root>  <p>linebreak goes 
 here</p>  </root>"

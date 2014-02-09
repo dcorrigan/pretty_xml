@@ -25,6 +25,7 @@ class PrettyPrint
   end
 
   def verify_doc doc
+    raise ArgumentError.new('The prettyprint argument must be a Nokogiri::XML::Document.') unless doc.is_a? Nokogiri::XML::Document 
     root = doc.root.name
     raise ArgumentError.new('The root node may not be specified as compact or inline.') if (@compact + @inline).include? root
   end
