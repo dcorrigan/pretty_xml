@@ -53,6 +53,7 @@ class PrettyPrint
 
   def needs_hard_return? block
     @compact.include? block.previous_element.andand.name or
+    @block.include? block.previous_element.andand.name or
     block == block.parent.elements.first
   end
 

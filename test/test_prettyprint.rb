@@ -79,6 +79,10 @@ class PrettyPrintTests < Minitest::Test
                        <div>
                        <p>yo yo<i/></p>
 </div>
+</structure> <structure>
+                       <div>
+                       <p>yo yo<i/></p>
+</div>
 </structure></root>"
     setup_and_exercise OP1
 expected = '<?xml version="1.0"?>
@@ -92,9 +96,14 @@ expected = '<?xml version="1.0"?>
       <p>yo yo<i/></p>
     </div>
   </structure>
+  <structure>
+    <div>
+      <p>yo yo<i/></p>
+    </div>
+  </structure>
 </root>
 '
-assert @pp == expected
+assert @pp == expected, "It looked like this: #{@pp}"
   end
 
 end
