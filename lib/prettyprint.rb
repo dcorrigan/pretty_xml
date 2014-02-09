@@ -3,8 +3,7 @@ require 'andand'
 
 class PrettyPrint
 
-  def initialize doc, options
-    @doc = doc
+  def initialize options
     @preserve_whitespace = true
     set_options_as_ivars options
   end
@@ -15,21 +14,20 @@ class PrettyPrint
     end
   end
 
-  def pp
-    strip_whitespace
-    pp_blocks
-    pp_compact
-    @doc.serialize(:save_with => 0)
+  def pp doc
+    strip_whitespace doc
+    pp_blocks doc
+    pp_compact doc
+    doc.serialize(:save_with => 0)
   end
 
-  def strip_whitespace
-    ws_accessor = get_ws_accessor
-    @doc.css(ws_accessor).each do |node|
+  def strip_whitespace doc
+    doc.css(ws_accessor).each do |node|
       eliminate_ws_nodes_from node
     end
   end
 
-  def get_ws_accessor
+  def ws_accessor
     ws_accessor = @preserve_whitespace ? @block : @block + @compact + @inline
     ws_accessor.join(',')
   end
@@ -41,9 +39,9 @@ class PrettyPrint
     end
   end
 
-  def pp_blocks
-    @doc.css(@block.join(',')).each do |block|
-      unless block == @doc.root
+  def pp_blocks doc
+    doc.css(@block.join(',')).each do |block|
+      unless block == doc.root
         block.add_previous_sibling "\n" if needs_hard_return? block
         add_left_space block
       end
@@ -57,8 +55,8 @@ class PrettyPrint
     block == block.parent.elements.first
   end
 
-  def pp_compact
-    @doc.css(@compact.join(',')).each do |compact|
+  def pp_compact doc
+    doc.css(@compact.join(',')).each do |compact|
       compact.add_previous_sibling "\n"
       add_left_space compact
     end

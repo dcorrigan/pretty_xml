@@ -30,7 +30,7 @@ class PrettyPrintTests < Minitest::Test
 
   def setup_and_exercise options
     @parsed = Nokogiri.XML @input
-    @pp = PrettyPrint.new(@parsed, options).pp
+    @pp = PrettyPrint.new(options).pp(@parsed)
   end
 
   def test_strips_basic_whitespace_from_block_when_ws_is_true
