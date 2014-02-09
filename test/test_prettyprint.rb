@@ -1,7 +1,8 @@
 # encoding: UTF-8
 require 'nokogiri'
+require 'minitest'
 require 'minitest/autorun'
-require_relative '../lib/prettyprint'
+require 'xml-prettyprint'
 
 class PrettyPrintTests < Minitest::Test
 

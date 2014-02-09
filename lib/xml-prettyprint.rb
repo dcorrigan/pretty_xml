@@ -24,6 +24,8 @@ class PrettyPrint
     doc.serialize(:save_with => 0)
   end
 
+  private
+
   def verify_doc doc
     raise ArgumentError.new('The prettyprint argument must be a Nokogiri::XML::Document.') unless doc.is_a? Nokogiri::XML::Document 
     root = doc.root.name
