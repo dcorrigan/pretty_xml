@@ -30,9 +30,8 @@ class PrettyPrintTests < Minitest::Test
     :tab => '  '
   }
 
-  def setup_and_exercise options
-    @parsed = Nokogiri.XML @input
-    @pp = PrettyPrint.new(options).pp(@parsed)
+  def setup_and_exercise(options)
+    @pp = PrettyPrint.new(options).pp(@input)
   end
 
   def test_strips_inline_and_compact_space_when_ws_is_false
@@ -58,6 +57,7 @@ class PrettyPrintTests < Minitest::Test
   end
 
   def test_badly_specified_root_node_raises_error
+    skip("dunno whether to keep this")
     @input = "<p>  <i>stuff<root> </root></i>  </p>"
     parsed = Nokogiri.XML @input
     pp = PrettyPrint.new(OP1)
@@ -67,6 +67,7 @@ class PrettyPrintTests < Minitest::Test
   end
 
   def test_nonnokogiri_doc_argument_raises_error
+    skip("dunno whether to keep this")
     input = "<p>  <i>stuff<root> </root></i>  </p>"
     pp = PrettyPrint.new(OP1)
     assert_raises(ArgumentError){
@@ -75,7 +76,7 @@ class PrettyPrintTests < Minitest::Test
   end
 
   def test_internal_linebreak_strip_works
-    @input = "<root>  <p>linebreak goes 
+    @input = "<root>  <p>linebreak goes
 here</p>  </root>"
     setup_and_exercise OP1
     assert @pp !~ /<p>[^<]*\n/
@@ -93,9 +94,9 @@ here</p>  </root>"
     def self.example1
       {:in => '<root>  <block>
  <p> </p>
-    
-    </block><p>stuff<i> </i></p>  
-    
+
+    </block><p>stuff<i> </i></p>
+
     <structure>
                        <div>
                        <p>yo yo<i/></p>
@@ -105,8 +106,7 @@ here</p>  </root>"
                        <p>yo yo<i/></p>
 </div>
 </structure></root>',
-      :out => '<?xml version="1.0"?>
-<root>
+      :out => '<root>
   <block>
     <p> </p>
   </block>
@@ -121,8 +121,7 @@ here</p>  </root>"
       <p>yo yo<i/></p>
     </div>
   </structure>
-</root>
-'
+</root>'
       }
     end
   end

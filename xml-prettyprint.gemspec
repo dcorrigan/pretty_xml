@@ -8,6 +8,7 @@ Gem::Specification.new do |s|
   s.description = "Accepts element lists as block, compact, and inline parameters and a tab parameter to create a new instance. When pp method is called with a Nokogiri::XML::Document as argument, the method returns a string formatted according to the logic of the element lists. For optional parameters, see README."
 
   s.add_development_dependency "minitest"
+  s.add_development_dependency "pry"
   s.add_dependency "nokogiri"
   s.add_dependency "andand"
 

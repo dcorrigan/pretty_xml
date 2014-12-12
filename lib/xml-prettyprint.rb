@@ -2,105 +2,154 @@ require 'nokogiri'
 require 'andand'
 
 class PrettyPrint
+  attr_reader :printer, :handler
 
-  def initialize options
-    @preserve_whitespace = true
-    set_options_as_ivars options
+  def initialize(options)
+    @handler = SaxPrinter.new(options)
+    @printer = Nokogiri::XML::SAX::Parser.new(handler)
   end
+
+  def pp(doc)
+    d = verify_doc(doc)
+    printer.parse(d)
+    handler.pretty
+  end
+
+  def verify_doc(doc)
+    doc.is_a?(Nokogiri::XML::Document) ? doc.to_xml : doc
+  end
+end
+
+class SaxPrinter < Nokogiri::XML::SAX::Document
+  attr_reader :pretty
 
   # expected params: block, compact, inline, tab
   # optional params: preserve_whitespace, delete_all_linebreaks
-  def set_options_as_ivars options
-    options.each do |name, value|
-      instance_variable_set("@#{name}", value)
+  def initialize(options)
+    set_options_as_ivars(options)
+  end
+
+  def start_document
+    @pretty = ''
+    @open_tag = ''
+    @depth = 0
+  end
+
+  def set_options_as_ivars(options)
+    @block = Set.new(options[:block])
+    @compact = Set.new(options[:compact])
+    @inline = Set.new(options[:inline])
+    @whitespace = options.include?(:preserve_whitespace) ?  options[:preserve_whitespace] : true
+    @tab = options[:tab] || '  '
+  end
+
+  def block?(name)
+    @block.include?(name)
+  end
+
+  def compact?(name)
+    @compact.include?(name)
+  end
+
+  def inline?(name)
+    @inline.include?(name)
+  end
+
+  def ws_adder
+    @tab * (@depth - 1)
+  end
+
+  def start_element(name, attributes)
+    @depth += 1
+    set_context(name)
+    ws = space_before_open(name)
+    @pretty << space_before_open(name) unless @depth == 1
+    add_opening_tag(name, attributes)
+    @open_tag = name
+  end
+
+  def space_before_open(name)
+    if block?(name)
+      @pretty.sub!(/\s*$/, '')
+      "\n" + ws_adder
+    elsif compact?(name)
+      @pretty.sub!(/\s*$/, '')
+      "\n" + ws_adder
+    else
+      ''
     end
   end
 
-  def pp doc
-    verify_doc doc
-    strip_whitespace doc
-    pp_blocks doc
-    pp_compact doc
-    doc.serialize(:save_with => 0)
-  end
-
-  private
-
-  def verify_doc doc
-    raise ArgumentError.new('The prettyprint argument must be a Nokogiri::XML::Document.') unless doc.is_a? Nokogiri::XML::Document 
-    root = doc.root.name
-    raise ArgumentError.new('The root node may not be specified as compact or inline.') if (@compact + @inline).include? root
-  end
-
-  def strip_whitespace doc
-    doc.css(ws_accessor).each do |node|
-      call_function_on_text node, Proc.new{ |x| x.remove if x.text.match /^\s*$/}
-    end
-    strip_extra_linebreaks doc if  @delete_all_linebreaks
-  end
-
-  def strip_extra_linebreaks doc
-    non_block_selector = (@compact + @inline).join(',')
-    doc.css(non_block_selector).each do |node|
-      call_function_on_text node, Proc.new{ |x| x.content = x.text.gsub(/[\r\n]/,'') }
+  def set_context(name)
+    if block?(name)
+      @in_block = true
+      @in_compact = false
+      @in_inline = false
+    elsif compact?(name)
+      @in_block = false
+      @in_compact = true
+      @in_inline = false
+    elsif inline?(name)
+      @in_block = false
+      @in_compact = false
+      @in_inline = true
     end
   end
 
-  def call_function_on_text node, function
-    node.children.each do |child|
-      next unless child.text?
-      function.call child
+  def end_element(name)
+    @pretty << space_before_close(name) unless @depth == 0
+    @open_tag == name ? @pretty[-1] = '/>' : @pretty << "</#{name}>"
+    @depth -= 1
+    @open_tag = nil
+  end
+
+  def space_before_close(name)
+    if block?(name)
+      @pretty.sub!(/\s*$/, '')
+      "\n" + ws_adder
+    elsif compact?(name)
+      ''
+    else
+      ''
     end
   end
 
-  def ws_accessor
-    ws_accessor = @preserve_whitespace ? @block : @block + @compact + @inline
-    ws_accessor.join(',')
+  def add_opening_tag(name, attrs)
+    attr_str = attrs.map { |n, v| "#{n}=\"#{v}\""}.join(' ')
+    tag = attrs.empty? ? "<#{name}>" : "<#{name} #{attr_str}>"
+    @pretty << tag
   end
 
-  def eliminate_ws_nodes_from node
-    node.children.each do |child|
-      next unless child.text?
-      child.remove if child.text.match /^\s*$/
+  def end_document
+    @pretty.gsub!(/\s*\n/, "\n")
+  end
+
+  def characters(string)
+    @open = nil
+    strc = handle_whitespace(string)
+    unless strc.empty?
+      @open_tag = nil
+      @pretty << sanitize(strc)
     end
   end
 
-  def pp_blocks doc
-    doc.css(@block.join(',')).each do |block|
-      adjust_block_context block unless block == doc.root
-      add_internal_space block
-    end
+  def whitespace?
+    @whitespace and @in_inline
   end
 
-  def adjust_block_context block
-    block.add_previous_sibling "\n" if needs_hard_return? block
-    add_left_space block
+  def handle_whitespace(string)
+    strc = string.gsub(/[\r\n]/, '')
+    strc = strc.gsub(/^\s+|\s+$/, '') unless @whitespace
+    strc
   end
 
-  def needs_hard_return? block
-    return true if block.previous_element.nil?
-    return true if (@compact + @block).include? block.previous_element.name
+  def comment(string)
+    @pretty << "<!--#{string}-->"
   end
 
-  def pp_compact doc
-    doc.css(@compact.join(',')).each do |compact|
-      compact.add_previous_sibling "\n"
-      add_left_space compact
-    end
+  def sanitize(string)
+    text = string.gsub(/&/, '&amp;')
+    text = text.gsub(/</, '&lt;')
+    text.gsub(/>/, '&gt;')
   end
-
-  def add_left_space node
-    node.add_previous_sibling space_for(node)
-  end
-
-  def add_internal_space node
-    node.add_child "\n"
-    node.add_child space_for(node)
-  end
-
-  def space_for node
-    space_multiplier = node.ancestors.size - 1
-    @tab * space_multiplier
-  end
-
 end
