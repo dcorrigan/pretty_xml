@@ -71,6 +71,13 @@ here</p>  </root>"
     assert @pp =~ /<\/i> <i>/
   end
 
+  def test_with_xmldec_and_processing_inst
+    @input = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><?xml-stylesheet type=\"text/xsl\" href=\"style.xsl\"?><root><p/></root>"
+    setup_and_exercise OP1
+    assert @pp =~ /<\?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"\?>\n/
+    assert @pp =~ /<\?xml-stylesheet [^>]*>\n/
+  end
+
   def test_more_complex_example
     @input = Examples.example1[:in]
     setup_and_exercise OP1

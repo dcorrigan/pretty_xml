@@ -6,36 +6,46 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     lt: {named: '&lt;', hex: '&x3c;'},
     gt: {named: '&gt;', hex: '&x3e;'},
   }
+  XMLDEC_ATTRS = %w(version encoding standalone)
 
   def initialize(options)
     set_options_as_ivars(options)
   end
 
-  def xmldecl(version, encoding, standalone)
-    opts = ''
-    opts << " version=\"#{version}\"" if version
-    opts << " encoding=\"#{encoding}\"" if encoding
-    opts << " standalone=\"#{standalone}\"" if standalone
+  def xmldec_attrs(args)
+    XMLDEC_ATTRS.each_with_index.to_a.map { |t, i| " #{t}=\"#{args[i]}\"" if args[i] }.compact.join
+  end
+
+  def xmldecl(*args)
+    opts = xmldec_attrs(args)
     pretty << "<?xml#{opts}?>"
   end
 
   def processing_instruction(name, content)
+    pretty << "\n" unless pretty.empty?
     pretty << "<?#{name} #{content}?>"
   end
 
   def start_document
-    @open_tag = ''
     @depth = 0
   end
 
-  def set_options_as_ivars(options)
+  def set_element_types(options)
     @block = Set.new(options[:block])
     @compact = Set.new(options[:compact])
     @inline = Set.new(options[:inline])
+  end
+
+  def set_control_vars(options)
     @whitespace = options.include?(:preserve_whitespace) ?  options[:preserve_whitespace] : true
     @close_tags = options[:close_tags] ? Set.new(options[:close_tags]) : []
     @ccs = options[:control_chars] || :named
     @tab = options[:tab] || '  '
+  end
+
+  def set_options_as_ivars(options)
+    set_element_types(options)
+    set_control_vars(options)
   end
 
   def block?(name)
@@ -58,42 +68,27 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   def start_element(name, attributes)
     @depth += 1
     set_context(name)
-    ws = space_before_open(name)
-    pretty << space_before_open(name)
+    space_before_open(name)
     add_opening_tag(name, attributes)
     @open_tag = name
   end
 
   def space_before_open(name)
-    if block?(name)
-      pretty.sub!(/\s*$/, '')
-      ws_adder
-    elsif compact?(name)
-      pretty.sub!(/\s*$/, '')
-      ws_adder
-    else
-      ''
-    end
+    increment_space if block?(name) or compact?(name)
+  end
+
+  def increment_space
+    pretty.sub!(/\s*$/, '')
+    pretty << ws_adder
   end
 
   def set_context(name)
-    if block?(name)
-      @in_block = true
-      @in_compact = false
-      @in_inline = false
-    elsif compact?(name)
-      @in_block = false
-      @in_compact = true
-      @in_inline = false
-    elsif inline?(name)
-      @in_block = false
-      @in_compact = false
-      @in_inline = true
-    end
+    @in_inline = inline?(name)
+    @in_compact = compact?(name)
   end
 
   def end_element(name)
-    pretty << space_before_close(name) unless @depth == 0
+    space_before_close(name)
     self_closing?(name) ? pretty[-1] = '/>' : pretty << "</#{name}>"
     @depth -= 1
     @open_tag = nil
@@ -104,42 +99,43 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   end
 
   def space_before_close(name)
-    if block?(name)
-      pretty.sub!(/\s*$/, '')
-      ws_adder
-    else
-      ''
-    end
+    increment_space if block?(name) and @depth != 0
   end
 
   def add_opening_tag(name, attrs)
-    attr_str = attrs.map { |n, v| "#{n}=\"#{v}\""}.join(' ')
-    tag = attrs.empty? ? "<#{name}>" : "<#{name} #{attr_str}>"
+    tag = attrs.empty? ? "<#{name}>" : tag_with_attrs(name, attrs)
     pretty << tag
+  end
+
+  def tag_with_attrs(name, attrs)
+    attr_str = attrs.map { |n, v| "#{n}=\"#{v}\""}.join(' ')
+    "<#{name} #{attr_str}>"
   end
 
   def end_document
     pretty.gsub!(/\s*\n/, "\n")
-    @xmldec = ''
   end
 
   def characters(string)
-    @open = nil
-    strc = handle_whitespace(string)
-    unless strc.empty?
+    handle_whitespace(string)
+    unless string.empty?
       @open_tag = nil
-      pretty << sanitize(strc)
+      sanitize(string)
+      pretty << string
     end
   end
 
   def whitespace?
-    @whitespace and @in_inline
+    @whitespace and below_block?
+  end
+
+  def below_block?
+    @in_inline or @in_compact
   end
 
   def handle_whitespace(string)
-    strc = string.gsub(/[\r\n]/, '')
-    strc = strc.gsub(/^\s+|\s+$/, '') unless @whitespace
-    strc
+    string.gsub!(/[\r\n]/, '')
+    string.gsub!(/^\s+|\s+$/, '') unless whitespace?
   end
 
   def comment(string)
@@ -147,9 +143,9 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   end
 
   def sanitize(string)
-    text = string.gsub(/&/, CCS[:amp][@ccs])
-    text = text.gsub(/</, CCS[:lt][@ccs])
-    text.gsub(/>/, CCS[:gt][@ccs])
+    string.gsub!(/&/, CCS[:amp][@ccs])
+    string.gsub!(/</, CCS[:lt][@ccs])
+    string.gsub!(/>/, CCS[:gt][@ccs])
   end
 
   def error(string)
