@@ -52,23 +52,10 @@ class PrettyPrintTests < Minitest::Test
     assert @pp
   end
 
-  def test_badly_specified_root_node_raises_error
-    skip("dunno whether to keep this")
+  def test_badly_specified_root_node_doesnt_break
     @input = "<p>  <i>stuff<root> </root></i>  </p>"
-    parsed = Nokogiri.XML @input
-    pp = PrettyPrint.new(OP1)
-    assert_raises(ArgumentError){
-      pp.pp(parsed)
-    }
-  end
-
-  def test_nonnokogiri_doc_argument_raises_error
-    skip("dunno whether to keep this")
-    input = "<p>  <i>stuff<root> </root></i>  </p>"
-    pp = PrettyPrint.new(OP1)
-    assert_raises(ArgumentError){
-      pp.pp(input)
-    }
+    setup_and_exercise OP1
+    assert @pp =~/\n\s+<root>/
   end
 
   def test_internal_linebreak_strip_works
@@ -89,6 +76,13 @@ here</p>  </root>"
     setup_and_exercise OP1
     expected = Examples.example1[:out]
     assert @pp == expected, "It looked like this: #{@pp}"
+  end
+
+  def test_raises_nonwellformed_error
+    @input = '<root><p></root>'
+    assert_raises(Nokogiri::XML::SyntaxError) {
+      setup_and_exercise(OP1)
+    }
   end
 
   module Examples

@@ -7,14 +7,16 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     gt: {named: '&gt;', hex: '&x3e;'},
   }
 
-  # expected params: block, compact, inline, tab
-  # optional params: preserve_whitespace, delete_all_linebreaks
   def initialize(options)
     set_options_as_ivars(options)
   end
 
   def xmldecl(version, encoding, standalone)
-    @pretty << "<?xml version=\"#{version}\" encoding=\"#{encoding}\" standalone=\"#{standalone}\"?>"
+    opts = ''
+    opts << " version=\"#{version}\"" if version
+    opts << " encoding=\"#{encoding}\"" if encoding
+    opts << " standalone=\"#{standalone}\"" if standalone
+    @xmldec = "<?xml#{opts}?>"
   end
 
   def processing_instruction(name, content)
@@ -22,7 +24,7 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   end
 
   def start_document
-    @pretty = ''
+    @pretty = @xmldec || ''
     @open_tag = ''
     @depth = 0
   end
@@ -120,6 +122,7 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
 
   def end_document
     @pretty.gsub!(/\s*\n/, "\n")
+    @xmldec = ''
   end
 
   def characters(string)
@@ -149,5 +152,9 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     text = string.gsub(/&/, CCS[:amp][@ccs])
     text = text.gsub(/</, CCS[:lt][@ccs])
     text.gsub(/>/, CCS[:gt][@ccs])
+  end
+
+  def error(string)
+    fail Nokogiri::XML::SyntaxError.new(string)
   end
 end

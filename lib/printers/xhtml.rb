@@ -14,8 +14,12 @@ module PrettyXML
       @elements.values.flatten - VOID
     end
 
+    def parsed_doc?(doc)
+      doc.is_a?(Nokogiri::HTML::Document) or doc.is_a?(Nokogiri::XML::Document)
+    end
+
     def verify_doc(doc)
-      doc.is_a?(Nokogiri::HTML::Document) ? doc.to_xml : doc
+      parsed_doc?(doc) ? doc.to_xml : doc
     end
   end
 end
