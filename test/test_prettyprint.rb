@@ -5,7 +5,6 @@ require 'minitest/autorun'
 require 'xml-prettyprint'
 
 class PrettyPrintTests < Minitest::Test
-
   OP1 = {
     :block => %w(root block structure div),
     :compact => %w(p),
@@ -82,6 +81,12 @@ here</p>  </root>"
     assert @pp !~ /<p>[^<]*\n/
   end
 
+  def test_retains_space_between_inline_els
+    @input = "<root><p>this <i>word</i> <i>and</i> this</p></root>"
+    setup_and_exercise OP1
+    assert @pp =~ /<\/i> <i>/
+  end
+
   def test_more_complex_example
     @input = Examples.example1[:in]
     setup_and_exercise OP1
@@ -90,7 +95,6 @@ here</p>  </root>"
   end
 
   module Examples
-
     def self.example1
       {:in => '<root>  <block>
  <p> </p>
@@ -125,5 +129,4 @@ here</p>  </root>"
       }
     end
   end
-
 end
