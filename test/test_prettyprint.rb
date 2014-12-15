@@ -1,8 +1,5 @@
 # encoding: UTF-8
-require 'nokogiri'
-require 'minitest'
-require 'minitest/autorun'
-require 'xml-prettyprint'
+require_relative 'test_helper'
 
 class PrettyPrintTests < Minitest::Test
   OP1 = {
@@ -30,7 +27,7 @@ class PrettyPrintTests < Minitest::Test
   }
 
   def setup_and_exercise(options)
-    @pp = PrettyPrint.new(options).pp(@input)
+    @pp = PrettyXML::PrettyPrint.new(options).pp(@input)
   end
 
   def test_strips_inline_and_compact_space_when_ws_is_false
