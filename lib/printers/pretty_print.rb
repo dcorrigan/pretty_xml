@@ -9,10 +9,10 @@ module PrettyXML
 
     def pp(doc)
       d = verify_doc(doc)
-      dn = doctype_node(doc)
+      pretty = doctype_node(doc).to_s
+      handler.pretty = pretty
       printer.parse(d)
-      p = handler.pretty
-      dn ? "#{dn}\n#{p}" : p
+      pretty
     end
 
     def verify_doc(doc)

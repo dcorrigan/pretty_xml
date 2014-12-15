@@ -75,7 +75,7 @@ here</p>  </root>"
     @input = Examples.example1[:in]
     setup_and_exercise OP1
     expected = Examples.example1[:out]
-    assert @pp == expected, "It looked like this: #{@pp}"
+    assert @pp == expected, "It looked like this: \n#{@pp}"
   end
 
   def test_raises_nonwellformed_error

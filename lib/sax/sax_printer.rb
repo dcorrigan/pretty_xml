@@ -1,5 +1,5 @@
 class SaxPrinter < Nokogiri::XML::SAX::Document
-  attr_reader :pretty
+  attr_accessor :pretty
 
   CCS = {
     amp: {named: '&amp;', hex: '&x26;'},
@@ -16,15 +16,14 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     opts << " version=\"#{version}\"" if version
     opts << " encoding=\"#{encoding}\"" if encoding
     opts << " standalone=\"#{standalone}\"" if standalone
-    @xmldec = "<?xml#{opts}?>"
+    pretty << "<?xml#{opts}?>"
   end
 
   def processing_instruction(name, content)
-    @pretty << "<?#{name} #{content}?>"
+    pretty << "<?#{name} #{content}?>"
   end
 
   def start_document
-    @pretty = @xmldec || ''
     @open_tag = ''
     @depth = 0
   end
@@ -52,25 +51,26 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   end
 
   def ws_adder
-    @tab * (@depth - 1)
+    ws = @tab * (@depth - 1)
+    pretty.empty? ? ws : "\n#{ws}"
   end
 
   def start_element(name, attributes)
     @depth += 1
     set_context(name)
     ws = space_before_open(name)
-    @pretty << space_before_open(name) unless @depth == 1
+    pretty << space_before_open(name)
     add_opening_tag(name, attributes)
     @open_tag = name
   end
 
   def space_before_open(name)
     if block?(name)
-      @pretty.sub!(/\s*$/, '')
-      "\n" + ws_adder
+      pretty.sub!(/\s*$/, '')
+      ws_adder
     elsif compact?(name)
-      @pretty.sub!(/\s*$/, '')
-      "\n" + ws_adder
+      pretty.sub!(/\s*$/, '')
+      ws_adder
     else
       ''
     end
@@ -93,8 +93,8 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   end
 
   def end_element(name)
-    @pretty << space_before_close(name) unless @depth == 0
-    self_closing?(name) ? @pretty[-1] = '/>' : @pretty << "</#{name}>"
+    pretty << space_before_close(name) unless @depth == 0
+    self_closing?(name) ? pretty[-1] = '/>' : pretty << "</#{name}>"
     @depth -= 1
     @open_tag = nil
   end
@@ -105,10 +105,8 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
 
   def space_before_close(name)
     if block?(name)
-      @pretty.sub!(/\s*$/, '')
-      "\n" + ws_adder
-    elsif compact?(name)
-      ''
+      pretty.sub!(/\s*$/, '')
+      ws_adder
     else
       ''
     end
@@ -117,11 +115,11 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   def add_opening_tag(name, attrs)
     attr_str = attrs.map { |n, v| "#{n}=\"#{v}\""}.join(' ')
     tag = attrs.empty? ? "<#{name}>" : "<#{name} #{attr_str}>"
-    @pretty << tag
+    pretty << tag
   end
 
   def end_document
-    @pretty.gsub!(/\s*\n/, "\n")
+    pretty.gsub!(/\s*\n/, "\n")
     @xmldec = ''
   end
 
@@ -130,7 +128,7 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     strc = handle_whitespace(string)
     unless strc.empty?
       @open_tag = nil
-      @pretty << sanitize(strc)
+      pretty << sanitize(strc)
     end
   end
 
@@ -145,7 +143,7 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   end
 
   def comment(string)
-    @pretty << "<!--#{string}-->"
+    pretty << "<!--#{string}-->"
   end
 
   def sanitize(string)
