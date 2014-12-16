@@ -12,6 +12,14 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     set_options_as_ivars(options)
   end
 
+  def start_element_namespace(name, attrs = [], prefix = nil, uri = nil, ns = [])
+    if @use_ns
+      super
+    else
+      start_element(name, attrs.map { |a| [a.localname, a.value] })
+    end
+  end
+
   def xmldec_attrs(args)
     XMLDEC_ATTRS.each_with_index.to_a.map { |t, i| " #{t}=\"#{args[i]}\"" if args[i] }.compact.join
   end
@@ -39,6 +47,7 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     @whitespace = options.include?(:preserve_whitespace) ?  options[:preserve_whitespace] : true
     @close_tags = options[:close_tags] ? Set.new(options[:close_tags]) : []
     @ccs = options[:control_chars] || :named
+    @use_ns = options[:use_namespaces]
     @tab = options[:tab] || '  '
   end
 
@@ -77,7 +86,6 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   end
 
   def increment_space
-    pretty.sub!(/\s*$/, '')
     pretty << ws_adder
   end
 
