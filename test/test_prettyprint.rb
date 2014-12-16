@@ -72,10 +72,11 @@ here</p>  </root>"
   end
 
   def test_with_xmldec_and_processing_inst
-    @input = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><?xml-stylesheet type=\"text/xsl\" href=\"style.xsl\"?><root><p/></root>"
+    @input = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><?xml-stylesheet type=\"text/xsl\" href=\"style.xsl\"?><!DOCTYPE sam PUBLIC \"-//Scribe, Inc.//DTD sam v1.2.0//EN\" \"http://scribenet.com/get/doctype/scml_dtds/2.1.0/sam.dtd\"><root><p/></root>"
     setup_and_exercise OP1
     assert @pp =~ /<\?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"\?>\n/
     assert @pp =~ /<\?xml-stylesheet [^>]*>\n/
+    assert @pp =~ /<!DOCTYPE [^>]*>\n/
   end
 
   def test_more_complex_example

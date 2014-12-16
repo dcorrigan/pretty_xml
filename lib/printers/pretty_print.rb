@@ -9,10 +9,14 @@ module PrettyXML
 
     def pp(doc)
       d = verify_doc(doc)
-      pretty = doctype_node(doc).to_s
+      dn = doctype_node(doc)
+      instrs = []
+      pretty = ''
       handler.pretty = pretty
+      handler.instructions = instrs
       printer.parse(d)
-      pretty
+      instrs << dn if dn
+      instrs.empty? ? pretty : "#{instrs.join("\n")}\n#{pretty}"
     end
 
     def verify_doc(doc)

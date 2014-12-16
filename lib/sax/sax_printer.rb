@@ -1,5 +1,5 @@
 class SaxPrinter < Nokogiri::XML::SAX::Document
-  attr_accessor :pretty
+  attr_accessor :pretty, :instructions
 
   CCS = {
     amp: {named: '&amp;', hex: '&x26;'},
@@ -18,12 +18,11 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
 
   def xmldecl(*args)
     opts = xmldec_attrs(args)
-    pretty << "<?xml#{opts}?>"
+    instructions << "<?xml#{opts}?>"
   end
 
   def processing_instruction(name, content)
-    pretty << "\n" unless pretty.empty?
-    pretty << "<?#{name} #{content}?>"
+    instructions << "<?#{name} #{content}?>"
   end
 
   def start_document
