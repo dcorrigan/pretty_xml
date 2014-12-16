@@ -1,11 +1,7 @@
 # encoding: UTF-8
-require 'nokogiri'
-require 'minitest'
-require 'minitest/autorun'
-require 'xml-prettyprint'
+require_relative 'test_helper'
 
 class PrettyPrintTests < Minitest::Test
-
   OP1 = {
     :block => %w(root block structure div),
     :compact => %w(p),
@@ -30,9 +26,8 @@ class PrettyPrintTests < Minitest::Test
     :tab => '  '
   }
 
-  def setup_and_exercise options
-    @parsed = Nokogiri.XML @input
-    @pp = PrettyPrint.new(options).pp(@parsed)
+  def setup_and_exercise(options)
+    @pp = PrettyXML::PrettyPrint.new(options).pp(@input)
   end
 
   def test_strips_inline_and_compact_space_when_ws_is_false
@@ -57,45 +52,54 @@ class PrettyPrintTests < Minitest::Test
     assert @pp
   end
 
-  def test_badly_specified_root_node_raises_error
+  def test_badly_specified_root_node_doesnt_break
     @input = "<p>  <i>stuff<root> </root></i>  </p>"
-    parsed = Nokogiri.XML @input
-    pp = PrettyPrint.new(OP1)
-    assert_raises(ArgumentError){
-      pp.pp(parsed)
-    }
-  end
-
-  def test_nonnokogiri_doc_argument_raises_error
-    input = "<p>  <i>stuff<root> </root></i>  </p>"
-    pp = PrettyPrint.new(OP1)
-    assert_raises(ArgumentError){
-      pp.pp(input)
-    }
+    setup_and_exercise OP1
+    assert @pp =~/\n\s+<root>/
   end
 
   def test_internal_linebreak_strip_works
-    @input = "<root>  <p>linebreak goes 
+    @input = "<root>  <p>linebreak goes
 here</p>  </root>"
     setup_and_exercise OP1
     assert @pp !~ /<p>[^<]*\n/
+  end
+
+  def test_retains_space_between_inline_els
+    @input = "<root><p>this <i>word</i> <i>and</i> this</p></root>"
+    setup_and_exercise OP1
+    assert @pp =~ /<\/i> <i>/
+  end
+
+  def test_with_xmldec_and_processing_inst
+    @input = "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?><?xml-stylesheet type=\"text/xsl\" href=\"style.xsl\"?><!DOCTYPE sam PUBLIC \"-//Scribe, Inc.//DTD sam v1.2.0//EN\" \"http://scribenet.com/get/doctype/scml_dtds/2.1.0/sam.dtd\"><root><p/></root>"
+    setup_and_exercise OP1
+    assert @pp =~ /<\?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"\?>\n/
+    assert @pp =~ /<\?xml-stylesheet [^>]*>\n/
+    assert @pp =~ /<!DOCTYPE [^>]*>\n/
   end
 
   def test_more_complex_example
     @input = Examples.example1[:in]
     setup_and_exercise OP1
     expected = Examples.example1[:out]
-    assert @pp == expected, "It looked like this: #{@pp}"
+    assert @pp == expected, "It looked like this: \n#{@pp}"
+  end
+
+  def test_raises_nonwellformed_error
+    @input = '<root><p></root>'
+    assert_raises(Nokogiri::XML::SyntaxError) {
+      setup_and_exercise(OP1)
+    }
   end
 
   module Examples
-
     def self.example1
       {:in => '<root>  <block>
  <p> </p>
-    
-    </block><p>stuff<i> </i></p>  
-    
+
+    </block><p>stuff<i> </i></p>
+
     <structure>
                        <div>
                        <p>yo yo<i/></p>
@@ -105,8 +109,7 @@ here</p>  </root>"
                        <p>yo yo<i/></p>
 </div>
 </structure></root>',
-      :out => '<?xml version="1.0"?>
-<root>
+      :out => '<root>
   <block>
     <p> </p>
   </block>
@@ -121,10 +124,8 @@ here</p>  </root>"
       <p>yo yo<i/></p>
     </div>
   </structure>
-</root>
-'
+</root>'
       }
     end
   end
-
 end
