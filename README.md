@@ -1,34 +1,38 @@
-xml-prettyprint
+pretty_xml
 ===============
 
-A Ruby re-write of Perl's LibXML PrettyPrint.
+This is pre-1.0 and probably unstable. Use at your own risk
 
-I don't recommend using this unless you are absolutely sure a human will have to read your XML file. It is slow and resource-intensive.
+I don't recommend using this unless you are sure a human will have to read your XML file.
 
-`xml-prettyprint` does not support namespaced nodes yet.
+Non-features:
+
+  - `pretty_xml` does not support namespaced nodes yet.
+  - deletes all linebreaks from input
 
 ## Use
 
-`xml-prettyprint` expects that three main parameters be passed:
+`pretty_xml` expects that three main parameters be passed:
 
   1. `block`: elements that should have internal and external linebreaks
   2. `compact`: elements that should have external linebreaks
   3. `inline`: elements that should have neither internal not external linebreaks
 
-A fourth parameter, `tab`, specifies the kind of space that should be used for indenting the output. Pass literal characters; for example, two spaces or a tab.
-
 Additional parameters are:
 
   1. `preserve_whitespace`: retain standalone whitespace only text nodes within compact and inline elements 
-  2. `delete_all_linebreaks`: delete linebreak characters within all text nodes, regardless of whether preserve_whitespace is set to true
+  2. `tab`: specifies the kind of space that should be used for indenting the output.
 
-Use these parameters within a hash to initialize an instance of the `PrettyPrint` class. To prettyprint a document, pass a `Nokogiri::XML::Document` as an argument to the `pp` method of your `PrettyPrint` object.
+Less common parameters:
+
+  1. `close_tags`: a list of tags that need explicit closing tags in the output (as in HTML5, `<a id="something"></a>` is correct, but a self-closing `<a id="something"/>` will not be parsed correctly in all cases)
+  2. `control_chars`: options are `:named` or `:hex` for `<`, `>`, and `&` as literal characters in output; defaults to `:named`
+
+Use these parameters within a hash to initialize an instance of the `PrettyXML::PrettyPrint` class. To prettyprint a document, pass a `Nokogiri::XML::Document` or a string as an argument to the `pp` method.
 
 ## Example
 
-    require 'nokogiri'
-
-    doc = Nokogiri.XML '<root>  <block>
+    doc = '<root>  <block>
      <p> 
     </p>
         
@@ -49,7 +53,7 @@ Use these parameters within a hash to initialize an instance of the `PrettyPrint
       :tab => '  '
     }
 
-    puts PrettyPrint.new(options).pp(doc)
+    puts PrettyXML::PrettyPrint.new(options).pp(doc)
 
 returns
 
@@ -66,3 +70,4 @@ returns
       </structure>
     </root>
 
+## Pretty HTML

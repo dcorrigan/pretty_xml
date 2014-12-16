@@ -13,6 +13,6 @@ Gem::Specification.new do |s|
   s.add_development_dependency('rspec')
   s.add_dependency("nokogiri")
 
-  s.files        = Dir.glob("lib/**/*") + %w(LICENSE README.md)
-  s.require_path = 'lib'
+  s.files        = Dir.glob("{lib,etc}/**/*") + %w(LICENSE README.md)
+  s.require_paths = 'lib'
 end
