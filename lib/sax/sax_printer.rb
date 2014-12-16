@@ -35,6 +35,7 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
 
   def start_document
     @depth = 0
+    @opens = []
   end
 
   def set_element_types(options)
@@ -68,6 +69,18 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     @inline.include?(name)
   end
 
+  def in_inline?
+    inline?(@opens[-1])
+  end
+
+  def in_compact?
+    compact?(@opens[-1])
+  end
+
+  def in_block?
+    block?(@opens[-1])
+  end
+
   def ws_adder
     ws = @tab * (@depth - 1)
     pretty.empty? ? ws : "\n#{ws}"
@@ -75,9 +88,9 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
 
   def start_element(name, attributes)
     @depth += 1
-    set_context(name)
     space_before_open(name)
     add_opening_tag(name, attributes)
+    @opens << name
     @open_tag = name
   end
 
@@ -89,16 +102,12 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     pretty << ws_adder
   end
 
-  def set_context(name)
-    @in_inline = inline?(name)
-    @in_compact = compact?(name)
-  end
-
   def end_element(name)
     space_before_close(name)
     self_closing?(name) ? pretty[-1] = '/>' : pretty << "</#{name}>"
     @depth -= 1
     @open_tag = nil
+    @opens.pop
   end
 
   def self_closing?(name)
@@ -120,10 +129,10 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   end
 
   def end_document
-    pretty.gsub!(/\s*\n/, "\n")
   end
 
   def characters(string)
+    return false if ws_only_in_block?(string)
     handle_whitespace(string)
     unless string.empty?
       @open_tag = nil
@@ -132,12 +141,16 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     end
   end
 
+  def ws_only_in_block?(string)
+    string[/^\s*$/] and in_block?
+  end
+
   def whitespace?
     @whitespace and below_block?
   end
 
   def below_block?
-    @in_inline or @in_compact
+    in_inline? or in_compact?
   end
 
   def handle_whitespace(string)
