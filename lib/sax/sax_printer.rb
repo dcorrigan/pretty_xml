@@ -103,8 +103,12 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   end
 
   def end_element(name)
-    space_before_close(name)
-    self_closing?(name) ? pretty[-1] = '/>' : pretty << "</#{name}>"
+    if self_closing?(name)
+      pretty[-1] = '/>'
+    else
+      space_before_close(name)
+      pretty << "</#{name}>"
+    end
     @depth -= 1
     @open_tag = nil
     @opens.pop

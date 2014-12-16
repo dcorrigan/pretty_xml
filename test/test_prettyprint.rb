@@ -55,7 +55,7 @@ class PrettyPrintTests < Minitest::Test
   def test_badly_specified_root_node_doesnt_break
     @input = "<p>  <i>stuff<root> </root></i>  </p>"
     setup_and_exercise OP1
-    assert @pp =~/\n\s+<root>/
+    assert @pp =~/\n\s+<root/
   end
 
   def test_internal_linebreak_strip_works
@@ -91,6 +91,12 @@ here</p>  </root>"
     assert_raises(Nokogiri::XML::SyntaxError) {
       setup_and_exercise(OP1)
     }
+  end
+
+  def test_selfclosing_input
+    @input = '<root><block><block/></block></root>'
+    setup_and_exercise(OP1)
+    assert Nokogiri.XML(@pp).errors.empty?
   end
 
   module Examples
