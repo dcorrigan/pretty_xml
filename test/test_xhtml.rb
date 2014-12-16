@@ -23,7 +23,7 @@ class XHTMLPrettyPrintTests < Minitest::Test
 
   def load_in_and_out(subdir)
     @in = read_sample(subdir, 'in')
-    @out = read_sample(subdir, 'out')
+    @out = read_sample(subdir, 'out').sub!(/\n$/,'')
   end
 
   def test_example_one

@@ -2,9 +2,9 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   attr_accessor :pretty, :instructions
 
   CCS = {
-    amp: {named: '&amp;', hex: '&x26;'},
-    lt: {named: '&lt;', hex: '&x3c;'},
-    gt: {named: '&gt;', hex: '&x3e;'},
+    amp: {named: '&amp;', hex: '&#x26;'},
+    lt: {named: '&lt;', hex: '&#x3c;'},
+    gt: {named: '&gt;', hex: '&#x3e;'},
   }
   XMLDEC_ATTRS = %w(version encoding standalone)
 

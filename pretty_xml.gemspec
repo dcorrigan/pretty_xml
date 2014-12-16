@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "pretty_xml"
-  s.version     = '0.0.1'
+  s.version     = '0.0.1.6'
   s.authors     = ["Dan Corrigan"]
   s.email       = ["df.corrigan@gmail.com"]
   s.homepage    = "http://github.com/dcorrigan/pretty_xml"
@@ -14,5 +14,4 @@ Gem::Specification.new do |s|
   s.add_dependency("nokogiri")
 
   s.files        = Dir.glob("{lib,etc}/**/*") + %w(LICENSE README.md)
-  s.require_paths = 'lib'
 end
