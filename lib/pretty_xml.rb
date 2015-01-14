@@ -1,5 +1,5 @@
 require 'nokogiri'
-require 'config'
-require 'sax'
-require 'printers'
+require_relative 'config'
+require_relative 'sax'
+require_relative 'printers'
 
