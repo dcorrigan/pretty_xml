@@ -164,6 +164,7 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
 
   def comment(string)
     pretty << "<!--#{string}-->"
+    @open_tag = nil
   end
 
   def sanitize(string)
