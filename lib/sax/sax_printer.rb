@@ -47,6 +47,7 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   def set_control_vars(options)
     @whitespace = options.include?(:preserve_whitespace) ?  options[:preserve_whitespace] : true
     @close_tags = options[:close_tags] ? Set.new(options[:close_tags]) : []
+    @preserve_linebreaks = options[:preserve_linebreaks] ? Set.new(options[:preserve_linebreaks]) : []
     @ccs = options[:control_chars] || :named
     @use_ns = options[:use_namespaces]
     @tab = options[:tab] || '  '
@@ -146,11 +147,15 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   end
 
   def ws_only_in_block?(string)
-    string[/^\s*$/] and in_block?
+    string[/\A\s*\Z/] and in_block?
   end
 
   def whitespace?
     @whitespace and below_block?
+  end
+
+  def keep_linebreaks?
+    @preserve_linebreaks.include?(@open_tag)
   end
 
   def below_block?
@@ -158,7 +163,7 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   end
 
   def handle_whitespace(string)
-    string.gsub!(/[\r\n]/, '')
+    string.gsub!(/[\r\n]/, '') unless keep_linebreaks?
     string.gsub!(/^\s+|\s+$/, '') unless whitespace?
   end
 
