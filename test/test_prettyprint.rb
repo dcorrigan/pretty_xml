@@ -26,6 +26,15 @@ class PrettyPrintTests < Minitest::Test
     :tab => '  '
   }
 
+  OP4 = {
+    :block => %w(root style block structure div),
+    :compact => %w(p),
+    :inline => %w(i),
+    :preserve_whitespace => true,
+    :preserve_linebreaks => ['style'],
+    :tab => '  '
+  }
+
   def setup_and_exercise(options)
     @pp = PrettyXML::PrettyPrint.new(options).pp(@input)
   end
@@ -84,6 +93,19 @@ here</p>  </root>"
     assert @pp =~ /<\?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"\?>\n/
     assert @pp =~ /<\?xml-stylesheet [^>]*>\n/
     assert @pp =~ /<!DOCTYPE [^>]*>\n/
+  end
+
+  def test_can_preserve_specified_linebreaks
+    @input = <<-EOF
+<root>
+<style>
+bq {}
+eq {}
+</style>
+<p><i><!-- comment --></i></p></root>
+EOF
+    setup_and_exercise OP4
+    assert @pp.scan(/\}\n/).size > 1
   end
 
   def test_more_complex_example
