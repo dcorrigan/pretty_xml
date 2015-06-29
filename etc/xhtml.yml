@@ -31,6 +31,7 @@
   - svg
   - table
   - tbody
+  - td
   - tfoot
   - thead
   - tr
@@ -54,7 +55,6 @@
   - h5
   - h6
   - hr
-  - img
   - input
   - keygen
   - label
@@ -73,7 +73,6 @@
   - source
   - style
   - summary
-  - td
   - template
   - textarea
   - th
@@ -94,6 +93,7 @@
   - dfn
   - em
   - i
+  - img
   - ins
   - kbd
   - mark
@@ -113,5 +113,3 @@
   - u
   - var
   - wbr
-
-
