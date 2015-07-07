@@ -108,6 +108,22 @@ EOF
     assert @pp.scan(/\}\n/).size > 1
   end
 
+  def test_can_treat_comments_contextually
+    @input = <<-EOF
+<root>
+<p>foo</p><!--<p>foo</p>-->
+</root>
+EOF
+    output = <<-OUT
+<root>
+  <p>foo</p>
+  <!--<p>foo</p>-->
+</root>
+OUT
+    setup_and_exercise OP1
+    assert @pp.strip == output.strip, "expected:\n#{output}\ngot:\n#{@pp}"
+  end
+
   def test_more_complex_example
     @input = Examples.example1[:in]
     setup_and_exercise OP1
