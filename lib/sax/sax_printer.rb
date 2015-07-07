@@ -168,6 +168,11 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   end
 
   def comment(string)
+    if in_block?
+      @depth += 1
+      increment_space
+      @depth -= 1
+    end
     pretty << "<!--#{string}-->"
     @open_tag = nil
   end
