@@ -167,14 +167,22 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     string.gsub!(/^\s+|\s+$/, '') unless whitespace?
   end
 
-  def comment(string)
+  def nontextual_text(str, op, cl)
     if in_block?
       @depth += 1
       increment_space
       @depth -= 1
     end
-    pretty << "<!--#{string}-->"
+    pretty << "#{op}#{str}#{cl}"
     @open_tag = nil
+  end
+
+  def comment(string)
+    nontextual_text(string, '<!--', '-->')
+  end
+
+  def cdata_block(string)
+    nontextual_text(string, '<![CDATA[', ']]>')
   end
 
   def sanitize(string)

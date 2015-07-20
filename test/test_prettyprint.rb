@@ -144,6 +144,17 @@ OUT
     assert Nokogiri.XML(@pp).errors.empty?
   end
 
+  def test_retains_cdata
+    expected = 'some text content'
+    @input = <<-XML
+<root>
+<![CDATA[#{expected}]]>
+</root>
+XML
+    setup_and_exercise(OP1)
+    assert @pp[expected]
+  end
+
   module Examples
     def self.example1
       {:in => '<root>  <block>
