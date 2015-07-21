@@ -111,6 +111,7 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
       pretty << "</#{name}>"
     end
     @depth -= 1
+    space_after_close(name)
     @open_tag = nil
     @opens.pop
   end
@@ -121,6 +122,10 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
 
   def space_before_close(name)
     increment_space if block?(name) and @depth != 0
+  end
+
+  def space_after_close(name)
+    increment_space if compact?(name) and compact?(@opens[-2])
   end
 
   def add_opening_tag(name, attrs)
