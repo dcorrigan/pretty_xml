@@ -172,6 +172,23 @@ OP
     assert @pp[expected.strip]
   end
 
+  def test_compact_parent_of_block_behaves_as_block
+    @input = <<-XML
+<root>
+<p><block/></p>
+</root>
+XML
+    expected = <<-OP
+<root>
+  <p>
+    <block/>
+  </p>
+</root>
+OP
+    setup_and_exercise(OP1)
+    assert @pp[expected.strip]
+  end
+
   module Examples
     def self.example1
       {:in => '<root>  <block>

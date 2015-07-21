@@ -66,6 +66,10 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     @compact.include?(name)
   end
 
+  def block_or_compact?(name)
+    block?(name) or compact?(name)
+  end
+
   def inline?(name)
     @inline.include?(name)
   end
@@ -125,7 +129,7 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
   end
 
   def space_after_close(name)
-    increment_space if compact?(name) and compact?(@opens[-2])
+    increment_space if block_or_compact?(name) and compact?(@opens[-2])
   end
 
   def add_opening_tag(name, attrs)
