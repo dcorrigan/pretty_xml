@@ -66,6 +66,10 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     @compact.include?(name)
   end
 
+  def block_or_compact?(name)
+    block?(name) or compact?(name)
+  end
+
   def inline?(name)
     @inline.include?(name)
   end
@@ -111,6 +115,7 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
       pretty << "</#{name}>"
     end
     @depth -= 1
+    space_after_close(name)
     @open_tag = nil
     @opens.pop
   end
@@ -121,6 +126,10 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
 
   def space_before_close(name)
     increment_space if block?(name) and @depth != 0
+  end
+
+  def space_after_close(name)
+    increment_space if block_or_compact?(name) and compact?(@opens[-2])
   end
 
   def add_opening_tag(name, attrs)
@@ -167,14 +176,22 @@ class SaxPrinter < Nokogiri::XML::SAX::Document
     string.gsub!(/^\s+|\s+$/, '') unless whitespace?
   end
 
-  def comment(string)
+  def nontextual_text(str, op, cl)
     if in_block?
       @depth += 1
       increment_space
       @depth -= 1
     end
-    pretty << "<!--#{string}-->"
+    pretty << "#{op}#{str}#{cl}"
     @open_tag = nil
+  end
+
+  def comment(string)
+    nontextual_text(string, '<!--', '-->')
+  end
+
+  def cdata_block(string)
+    nontextual_text(string, '<![CDATA[', ']]>')
   end
 
   def sanitize(string)
