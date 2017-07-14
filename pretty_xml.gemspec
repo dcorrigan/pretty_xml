@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
   s.name        = "pretty_xml"
-  s.version     = '0.0.2.2'
+  s.version     = '0.0.3'
   s.authors     = ["Dan Corrigan"]
   s.email       = ["df.corrigan@gmail.com"]
   s.homepage    = "http://github.com/dcorrigan/pretty_xml"
