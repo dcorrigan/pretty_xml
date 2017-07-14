@@ -189,6 +189,22 @@ OP
     assert @pp[expected.strip]
   end
 
+  def test_normalize
+    @input = <<-XML
+<root>
+<p>a\u0300</p>
+</root>
+XML
+    expected = <<-XML
+<root>
+  <p>à</p>
+</root>
+XML
+    options = OP1.dup.merge(normalize: true)
+    setup_and_exercise(options)
+    assert_equal expected.strip, @pp
+  end
+
   module Examples
     def self.example1
       {:in => '<root>  <block>

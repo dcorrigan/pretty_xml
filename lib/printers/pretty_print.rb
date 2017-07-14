@@ -5,6 +5,7 @@ module PrettyXML
     def initialize(options)
       @handler = SaxPrinter.new(options)
       @printer = Nokogiri::XML::SAX::Parser.new(handler)
+      @normalize = options[:normalize]
     end
 
     def pp(doc)
@@ -16,7 +17,9 @@ module PrettyXML
       handler.instructions = instrs
       printer.parse(d)
       instrs << dn if dn
-      instrs.empty? ? pretty : "#{instrs.join("\n")}\n#{pretty}"
+      out = instrs.empty? ? pretty : "#{instrs.join("\n")}\n#{pretty}"
+      out.unicode_normalize! if @normalize
+      out
     end
 
     def verify_doc(doc)
