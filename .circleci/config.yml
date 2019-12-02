@@ -1,9 +1,20 @@
 version: 2.1
+commands:
+  early-exit:
+    steps:
+      - run:
+          name: Check meets criteria to be run
+          command: |
+            if [ "$CIRCLE_BRANCH" != "master" ] || [ "$CIRCLE_BRANCH" != "staging" ] || [ "$CIRCLE_PULL_REQUEST" = "" ]; then
+              circleci-agent step halt
+            fi
+
 jobs:
   build:
     docker:
       - image: circleci/ruby:2.4.1-node-browsers
     steps:
+      - early-exit
       - checkout
       - run:
           name: install dependencies
