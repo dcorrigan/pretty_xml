@@ -1,3 +1,5 @@
+bad edit
+
 pretty_xml
 ===============
 
@@ -20,7 +22,7 @@ Non-features:
 
 Additional parameters are:
 
-  1. `preserve_whitespace`: retain standalone whitespace only text nodes within compact and inline elements 
+  1. `preserve_whitespace`: retain standalone whitespace only text nodes within compact and inline elements
   2. `tab`: specifies the kind of space that should be used for indenting the output.
 
 Less common parameters:
@@ -33,11 +35,11 @@ Use these parameters within a hash to initialize an instance of the `PrettyXML::
 ## Example
 
     doc = '<root>  <block>
-     <p> 
+     <p>
     </p>
-        
-        </block><p>stuff<i> </i></p>  
-        
+
+        </block><p>stuff<i> </i></p>
+
         <structure>
                            <div>
                            <p>yo yo<i/></p>
